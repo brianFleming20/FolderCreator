@@ -62,7 +62,6 @@ def generate():
                 os.makedirs(mainPath, 0o777)
                 for letter in letters:
                     inside_titles = os.path.join(mainPath, f"{batch_name}{letter} {search_item.get()}")
-                    print(inside_titles)
                     if not os.path.exists(inside_titles):
                         os.makedirs(inside_titles, 0o777)
                 filedialog.askdirectory(initialdir=data_path.get(), title="Select file")
