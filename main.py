@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter import *
@@ -15,69 +16,99 @@ except:
 
 
 window = tk.Tk()
-window.title("Final Verification Folder Creator")
+window.title("Final Verification Folder Creator V3")
 frame = tk.Frame(master=window, width=1250, height=750)
 frame.pack()
+
+canvas_back = Canvas(bg='#FAEAB1', width=1220, height=750)
+canvas_back.place(x=5, y=5)
 
 search_item = StringVar()
 batch = StringVar()
 first_letter = StringVar()
 last_letter = StringVar()
 
+current_user = os.path.expanduser('~')
+base_path = os.path.join(current_user, "Deltex Medical", "")
 
-base_path = os.path.join("C:\\Users", os.getenv('username'), "Deltex Medical", "")
-
-file_data = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-test_location = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Deltex Medical\Shared No Security - Documents\Brian Fleming\Training Database')
+file_data = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents')
+test_location = os.path.join(current_user, 'Shared No Security - Documents\Brian Fleming\Test')
 data_path = StringVar()
+user = StringVar()
+user.set(current_user)
+test = False
+file_check = "Daily probe log"
+warning_name = canvas_back.create_text(800, 270, text=" ", fill="black", font=("Arial", 20, "bold"))
 
 
-canvas_back = Canvas(bg='#FAEAB1', width=1220, height=750)
-canvas_back.place(x=5, y=5)
-warning_name = canvas_back.create_text(550, 260, text=" ", fill="black", font=("Arial", 20, "bold"))
+def create_base_folder(mainPath):
+    create = False
+    if not os.path.exists(mainPath):
+        os.makedirs(mainPath, 0o777)
+        create = True
+    return create
+
+
+def create_data_folders(letters, mainPath):
+    create = False
+    for letter in letters:
+        inside_titles = os.path.join(mainPath, f"{batch.get()}{letter} {search_item.get()}")
+        if not os.path.exists(inside_titles):
+            os.makedirs(inside_titles, 0o777)
+            create = True
+    return create
+
+
+def generate_folders(first, last):
+    exist = False
+    batch_title = batch.get() + " " + search_item.get()
+    mainPath = os.path.join(data_path.get(), f"{batch_title}", "")
+    letters = [chr(item) for item in range(ord(first), ord(last) + 1)]
+    #########################################
+    # If the base folder does not exist     #
+    # create it first.                      #
+    #########################################
+    if create_base_folder(mainPath):
+        exist = create_data_folders(letters, mainPath)
+    #########################################
+    # If the base batch number already      #
+    # exists, don't create it but check if  #
+    # there are missing batch number files  #
+    #########################################
+    else:
+        create_data_folders(letters, mainPath)
+    return exist
+
+
+def warning_display(message):
+    if not test:
+        canvas_back.itemconfig(warning_name, text=message)
+        Tk.update(canvas_back)
 
 
 def generate():
     exist = False
     if not batch.get() or not first_letter.get() or not last_letter.get():
-        canvas_back.itemconfig(warning_name, text="Please complete the form.")
-        Tk.update(canvas_back)
-        canvas_back.after(2000, canvas_back.itemconfig(warning_name, text=" "))
-        Tk.update(canvas_back)
-        display()
+        warning_display("Please complete the form.")
+        canvas_back.after(2000, warning_display(" "))
+        if not test:
+            display()
     else:
         batch_name = batch.get()
         first = first_letter.get().upper()
         last = last_letter.get().upper()
         if not batch_name[-1].isdigit():
-            canvas_back.itemconfig(warning_name, text="Please remove the last letter")
-            Tk.update(canvas_back)
-            canvas_back.after(2000, canvas_back.itemconfig(warning_name, text=" "))
-            Tk.update(canvas_back)
+            warning_display("Please remove the last letter")
+            canvas_back.after(2000, warning_display(" "))
         else:
-            batch_title = batch_name + " " + search_item.get()
-            mainPath = os.path.join(data_path.get(), f"{batch_title}", "")
-            letters = [chr(item) for item in range(ord(first), ord(last) + 1)]
-            if not os.path.exists(mainPath):
-                os.makedirs(mainPath, 0o777)
-                for letter in letters:
-                    inside_titles = os.path.join(mainPath, f"{batch_name}{letter} {search_item.get()}")
-                    if not os.path.exists(inside_titles):
-                        os.makedirs(inside_titles, 0o777)
-                filedialog.askdirectory(initialdir=data_path.get(), title="Select file")
-            else:
-                for letter in letters:
-                    inside_titles = os.path.join(mainPath, f"{batch_name}{letter} {search_item.get()}")
-                    if not os.path.exists(inside_titles):
-                        os.makedirs(inside_titles, 0o777)
-                else:
-                    exist = True
-        if exist:
-            canvas_back.itemconfig(warning_name, text="Some folders already exist, updating..")
-            Tk.update(canvas_back)
-            canvas_back.after(3000, canvas_back.itemconfig(warning_name, text=" "))
-            Tk.update(canvas_back)
-            filedialog.askdirectory(initialdir=data_path.get(), title="Select file")
+            exist = generate_folders(first, last)
+    if not exist:
+        warning_display("Some folders already exist, updating..")
+        canvas_back.after(3000, warning_display(" "))
+        filedialog.askdirectory(initialdir=data_path.get(), title="Updated Folders")
+    else:
+        filedialog.askdirectory(initialdir=data_path.get(), title="Generated Folders")
+    return exist
 
 
 def search_data_path():
@@ -100,6 +131,7 @@ def write_data_file_locations():
         "location2": data_file
     }
     data_path.set(data_file)
+
     with open(raw_path, 'w') as user_file:
         json.dump(file_obj, user_file, indent=4)
 
@@ -111,11 +143,11 @@ def display():
         with open(raw_path, 'r') as load_user_file:
             load_data = json.load(load_user_file)
         data_path.set(load_data['location2'])
+        # data_path.set(test_location)
     else:
         write_data_file_locations()
-
-    tk.Label(canvas_back, text='Final Verification Folder Creation Tool', background='#FAEAB1', font=("Courier", 20, "bold")).place(
-        relx=0.2, rely=0.1, anchor='w')
+    tk.Label(canvas_back, text='Final Verification Folder Creation Tool', background='#FAEAB1',
+             font=("Courier", 20, "bold")).place(relx=0.2, rely=0.1, anchor='w')
     names = ["", "DP240", "DP12", "DP6", "I2C", "I2P", "I2S", "KDP72"]
     tk.Label(canvas_back, text="Deltex", background="#FAEAB1", foreground="#003865",
              font=('Helvetica', 28, 'bold'), width=12).place(relx=0.78, rely=0.05)
@@ -125,7 +157,11 @@ def display():
     canvas_entry.place(x=30, y=300)
     tk.Label(canvas_back, text="To create a series of folders for the final verification results to be recorded in\n"
                                "this tool will create these folders in the correct place.\n"
-                               f"\n[ {data_path.get()} ]", background="#FAEAB1", font=("Courier", 14)).place(relx=0.05, rely=0.2)
+                               f"\n[ {data_path.get()} ]",
+             background="#FAEAB1", font=("Courier", 14)).place(relx=0.05, rely=0.2)
+    tk.Label(canvas_back, text="Current Username", background="#FAEAB1",
+             font=("Courier", 14)).place(relx=0.05, rely=0.34)
+    tk.Label(canvas_back, textvariable=user, background="#FAEAB1", font=("Courier", 14)).place(relx=0.25, rely=0.34)
     tk.Label(canvas_entry, text="Probe Type: ", background="#C58940", font=("Courier", 16)).place(relx=0.1, rely=0.2)
     someStyle = ttk.Style()
     someStyle.configure('my.TMenubutton', font=('Futura', 16))
@@ -137,7 +173,8 @@ def display():
              font=("Courier", 16)).place(relx=0.38, rely=0.2)
     tk.Label(canvas_entry, text="Batch Number without any letters: ", background="#C58940",
              font=("Courier", 16)).place(relx=0.1, rely=0.4)
-    tk.Entry(canvas_entry, textvariable=batch, font=("Courier", 18), relief=SUNKEN, width=8).place(relx=0.5, rely=0.4)
+    tk.Entry(canvas_entry, textvariable=batch, font=("Courier", 18),
+             relief=SUNKEN, width=8).place(relx=0.5, rely=0.4)
     tk.Label(canvas_entry, text="Batch Number letters (first) ", background="#C58940",
              font=("Courier", 16)).place(relx=0.1, rely=0.55)
     tk.Entry(canvas_entry, textvariable=first_letter, font=("Courier", 18),
