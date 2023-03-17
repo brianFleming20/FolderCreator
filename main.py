@@ -136,6 +136,40 @@ def write_data_file_locations():
         json.dump(file_obj, user_file, indent=4)
 
 
+def search_format(file, base_batch):
+    style_format = []
+    print(f"\n batch {base_batch}")
+    # remove base batch from file
+    file_search = file[len(base_batch):]
+    # search through the file format
+    for item in file_search:
+        # add format to style form list
+        if 47 < ord(item) < 58:
+            style_format.append('N')
+        elif 64 < ord(item) < 91:
+            style_format.append('L')
+        else:
+            style_format.append(str(ord(item)))
+    return style_format
+
+
+def create_new_format(new_format, data, base_batch):
+    file_search = [letter for letter in data[len(base_batch):] if letter != " "]
+    data_length = len(file_search)
+    index = 0
+    new_batch = []
+    # iterate through the new format
+    for item in new_format:
+        if len(item) > 1:
+            n = int(item)
+            new_batch.append(chr(n))
+        else:
+            new_batch.append(file_search[index])
+            if index < data_length - 1:
+                index += 1
+    return "".join(new_batch)
+
+
 def display():
     raw_path = os.path.join(file_data, "FolderLocation.json")
     flag = os.path.exists(raw_path)
