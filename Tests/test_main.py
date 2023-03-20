@@ -116,17 +116,17 @@ class Test_main():
         format1 = "12345A DP240"
         format2 = "12345 A DP240"
         format3 = "12345A-DP240"
-        format4 = "12345-A /DP240"
+        format4 = "12345-A /DP12"
         batch = "12345"
         new_batch = "23476B DP12"
 
-        result = main.search_format(format3, batch)
+        result = main.search_format(format4, batch)
         result1 = main.create_new_format(result, new_batch, batch)
         print(result1)
 
     def test_new_format(self):
         new_format_data = ['45', 'L', '32', '47', 'L', 'L', 'N', 'N', 'N']
-        new_batch = "23476B DP12"
+        new_batch = "23476B DP240"
         batch = "23476"
 
         result = main.create_new_format(new_format_data, new_batch, batch)

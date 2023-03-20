@@ -138,7 +138,6 @@ def write_data_file_locations():
 
 def search_format(file, base_batch):
     style_format = []
-    print(f"\n batch {base_batch}")
     # remove base batch from file
     file_search = file[len(base_batch):]
     # search through the file format
@@ -155,7 +154,10 @@ def search_format(file, base_batch):
 
 def create_new_format(new_format, data, base_batch):
     file_search = [letter for letter in data[len(base_batch):] if letter != " "]
+    print(new_format)
+    print(file_search)
     data_length = len(file_search)
+    print(data_length)
     index = 0
     new_batch = []
     # iterate through the new format
@@ -167,7 +169,8 @@ def create_new_format(new_format, data, base_batch):
             new_batch.append(file_search[index])
             if index < data_length - 1:
                 index += 1
-    return "".join(new_batch)
+
+    return base_batch + "".join(new_batch)
 
 
 def display():
